@@ -1,0 +1,73 @@
+<html>
+<body>
+<button onclick="startRecording()">start</button><br>
+<button onclick="endRecording()">end</button>
+<button onclick="doPreview()">preview</button>
+<video id="video" autoplay playsInline muted></video>
+<script>
+let blobs = [];
+let stream;
+let mediaRecorder;
+async function startRecording()
+{
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (event) => {
+       // Let's append blobs for now, we could also upload them to the network.
+       if (event.data)
+            blobs.push(event.data);
+    }
+    mediaRecorder.onstop = doPreview;
+    // Let's receive 1 second blobs
+    mediaRecorder.start(1000);
+}
+function endRecording()
+{
+    // Let's stop capture and recording
+    mediaRecorder.stop();
+    stream.getTracks().forEach(track => track.stop());
+}
+function doPreview()
+{
+    if (!blobs.length)
+        return;
+    // Let's concatenate blobs to preview the recorded content
+    const url = video.src = URL.createObjectURL(new Blob(blobs, { type: mediaRecorder.mimeType }));
+	
+	//  const url = URL.createObjectURL(blobs);
+	const a = document.createElement('a');
+	const filename ="test.wbem";
+    
+    // Set the href and download attributes for the anchor element
+    // You can optionally set other attributes like `title`, etc
+    // Especially, if the anchor element will be attached to the DOM
+    a.href = url;
+    a.download = filename || 'download';
+    
+    // Click handler that releases the object URL after the element has been clicked
+    // This is required for one-off downloads of the blob content
+    // const clickHandler = () => {
+    //   setTimeout(() => {
+    //     URL.revokeObjectURL(url);
+    //     this.removeEventListener('click', clickHandler);
+    //   }, 150);
+    // };
+    
+    // Add the click event listener on the anchor element
+    // Comment out this line if you don't want a one-off download of the blob content
+    // a.addEventListener('click', clickHandler, false);
+    
+    // Programmatically trigger a click on the anchor element
+    // Useful if you want the download to happen automatically
+    // Without attaching the anchor element to the DOM
+    // Comment out this line if you don't want an automatic download of the blob content
+    a.click();
+    
+    // Return the anchor element
+    // Useful if you want a reference to the element
+    // in order to attach it to the DOM or use it in some other way
+    return a;
+}
+</script>
+</body>
+</html>
